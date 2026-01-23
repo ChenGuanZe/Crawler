@@ -1,0 +1,20 @@
+17:28:25.683 [background-preinit] INFO  o.h.v.i.util.Version - [<clinit>,21] - HV000001: Hibernate Validator 6.0.22.Final
+17:28:25.702 [main] INFO  com.Application - [logStarting,55] - Starting Application on JUKU with PID 6396 (D:\workspace\game\game-cnydh\target\classes started by cheng in D:\workspace\game)
+17:28:25.702 [main] INFO  com.Application - [logStartupProfileInfo,651] - No active profile set, falling back to default profiles: default
+17:29:20.088 [background-preinit] INFO  o.h.v.i.util.Version - [<clinit>,21] - HV000001: Hibernate Validator 6.0.22.Final
+17:29:20.100 [main] INFO  c.g.AppApplication - [logStarting,55] - Starting AppApplication on JUKU with PID 27568 (D:\workspace\game\game-proxy\target\classes started by cheng in D:\workspace\game)
+17:29:20.101 [main] INFO  c.g.AppApplication - [logStartupProfileInfo,655] - The following profiles are active: @profiles.active@
+17:29:22.203 [main] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Initializing ProtocolHandler ["http-nio-8085"]
+17:29:22.204 [main] INFO  o.a.c.c.StandardService - [log,173] - Starting service [Tomcat]
+17:29:22.204 [main] INFO  o.a.c.c.StandardEngine - [log,173] - Starting Servlet engine: [Apache Tomcat/9.0.41]
+17:29:22.274 [main] INFO  o.a.c.c.C.[.[.[/gameProxy] - [log,173] - Initializing Spring embedded WebApplicationContext
+17:29:23.258 [main] INFO  o.a.c.h.Http11NioProtocol - [log,173] - Starting ProtocolHandler ["http-nio-8085"]
+17:29:23.274 [main] INFO  c.g.AppApplication - [logStarted,61] - Started AppApplication in 3.384 seconds (JVM running for 4.108)
+17:29:23.275 [main] INFO  c.g.l.ApplicationRunnerImpl - [run,137] - 启动执行完成。。。。。。。
+17:29:23.276 [main] INFO  c.g.AppApplication - [main,30] - 
+----------------------------------------------------------
+	Application Game-Boot is running! Access URLs:
+	Local: 		http://localhost:8085/gameProxy/
+	External: 	http://192.168.8.56:8085/gameProxy/
+	Swagger	http://192.168.8.56:8085/gameProxy/doc.html
+----------------------------------------------------------

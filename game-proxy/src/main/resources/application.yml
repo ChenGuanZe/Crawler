@@ -1,0 +1,57 @@
+# Tomcat
+server:
+  port: 8085    #8085全部项目   8086 连接互动
+  servlet:
+    context-path: /gameProxy
+
+# Spring
+spring:
+  application:
+    # 应用名称
+    name: game-proxy
+  profiles:
+    # 环境配置
+    active: '@profiles.active@'
+  redis:
+    host: 127.0.0.1
+    port: 63379  # 6379 #63379
+    #Redis使用的数据库
+    database: 0
+    password: "Aa12345678"   #123456  # "Aa12345678"
+    #连接超时事件毫秒
+    timeout: 18000
+    lettuce:
+      pool:
+        #连接池最大连接数
+        max-active: 20
+        #最大阻塞等待时间
+        max-idle: 5
+        #连接池最小空闲连接
+        min-idle: 0
+manxiang:
+  session:
+    gcbwz: def6d3cf-b8c4-49d3-87bf-45b05583f612 #古城保卫战session-屠龙
+    ylbwz: 12b852b4-8a56-47a2-ad3d-b69cf3914488 #幽林保卫战session-唱唱
+  phone:
+    gcbwz: 18610826253 #古城保卫战session-屠龙
+    ylbwz: 18610826253 #幽林保卫战session-唱唱
+ympd:
+  domain: "https://ympd.xyz/v4.0/"
+  userName: "ff"
+  password: "ff123456"
+
+# 最大连接数
+http:
+  maxTotal: 100
+  # 并发数
+  defaultMaxPerRoute: 20
+  # 客户端创建连接超时时间
+  connectTimeout: 10000
+  # 从连接池中获取到连接的最长时间
+  connectionRequestTimeout: 500
+  # 服务端响应超时时间
+  socketTimeout: 30000
+  # 提交请求前测试连接是否可用
+  staleConnectionCheckEnabled: true
+  # 可用空闲连接过期时间,重用空闲连接时会先检查是否空闲时间超过这个时间，如果超过，释放socket重新建立
+  validateAfterInactivity: 3000000

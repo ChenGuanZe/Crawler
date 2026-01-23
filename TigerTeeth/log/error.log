@@ -1,0 +1,64 @@
+12:28:42.938 [WebSocketClient-SecureIO-2] ERROR c.y.GameYqlyyWsClient - [onClose,234] - [<虎牙>]链接关闭!Close to server
+13:48:19.780 [task-1] ERROR c.y.GameYqlyyWsClient - [connect,262] - <虎牙>[wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0]链接失败
+javax.websocket.DeploymentException: The HTTP request to initiate the WebSocket connection to [wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0] failed
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServerRecursive(WsWebSocketContainer.java:490)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServer(WsWebSocketContainer.java:197)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServer(WsWebSocketContainer.java:154)
+	at com.yqlyy.GameYqlyyWsClient.connect(GameYqlyyWsClient.java:260)
+	at com.yqlyy.GameYqlyyWsClient.report(GameYqlyyWsClient.java:269)
+	at com.dwydh.DwydhService.lambda$init$0(DwydhService.java:28)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.util.concurrent.TimeoutException: null
+	at org.apache.tomcat.websocket.AsyncChannelWrapperSecure$WrapperFuture.get(AsyncChannelWrapperSecure.java:515)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServerRecursive(WsWebSocketContainer.java:341)
+	... 8 common frames omitted
+13:52:59.074 [task-1] ERROR c.y.GameYqlyyWsClient - [connect,262] - <虎牙>[wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0]链接失败
+javax.websocket.DeploymentException: The HTTP request to initiate the WebSocket connection to [wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0] failed
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServerRecursive(WsWebSocketContainer.java:490)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServer(WsWebSocketContainer.java:197)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServer(WsWebSocketContainer.java:154)
+	at com.yqlyy.GameYqlyyWsClient.connect(GameYqlyyWsClient.java:260)
+	at com.yqlyy.GameYqlyyWsClient.report(GameYqlyyWsClient.java:269)
+	at com.dwydh.DwydhService.lambda$init$0(DwydhService.java:28)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.InterruptedException: null
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.doAcquireSharedNanos(AbstractQueuedSynchronizer.java:1039)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.tryAcquireSharedNanos(AbstractQueuedSynchronizer.java:1328)
+	at java.util.concurrent.CountDownLatch.await(CountDownLatch.java:277)
+	at org.apache.tomcat.websocket.AsyncChannelWrapperSecure$WrapperFuture.get(AsyncChannelWrapperSecure.java:513)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServerRecursive(WsWebSocketContainer.java:341)
+	... 8 common frames omitted
+15:10:59.071 [task-1] ERROR c.y.GameYqlyyWsClient - [connect,262] - <虎牙>[wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0]链接失败
+javax.websocket.DeploymentException: The HTTP request to initiate the WebSocket connection to [wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0] failed
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServerRecursive(WsWebSocketContainer.java:490)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServer(WsWebSocketContainer.java:197)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServer(WsWebSocketContainer.java:154)
+	at com.yqlyy.GameYqlyyWsClient.connect(GameYqlyyWsClient.java:260)
+	at com.yqlyy.GameYqlyyWsClient.report(GameYqlyyWsClient.java:269)
+	at com.dwydh.DwydhService.lambda$init$0(DwydhService.java:28)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.util.concurrent.TimeoutException: null
+	at org.apache.tomcat.websocket.AsyncChannelWrapperSecure$WrapperFuture.get(AsyncChannelWrapperSecure.java:515)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServerRecursive(WsWebSocketContainer.java:341)
+	... 8 common frames omitted
+22:17:38.099 [task-1] ERROR c.y.GameYqlyyWsClient - [connect,266] - <虎牙>[wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0]链接失败
+javax.websocket.DeploymentException: The HTTP request to initiate the WebSocket connection to [wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0] failed
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServerRecursive(WsWebSocketContainer.java:490)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServer(WsWebSocketContainer.java:197)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServer(WsWebSocketContainer.java:154)
+	at com.yqlyy.GameYqlyyWsClient.connect(GameYqlyyWsClient.java:264)
+	at com.yqlyy.GameYqlyyWsClient.report(GameYqlyyWsClient.java:273)
+	at com.dwydh.DwydhService.lambda$init$0(DwydhService.java:28)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.util.concurrent.TimeoutException: null
+	at org.apache.tomcat.websocket.AsyncChannelWrapperSecure$WrapperFuture.get(AsyncChannelWrapperSecure.java:515)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServerRecursive(WsWebSocketContainer.java:341)
+	... 8 common frames omitted

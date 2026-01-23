@@ -1,0 +1,18 @@
+18:54:38.551 [task-1] ERROR c.y.GameYqlyyWsClient - [connect,296] - <虎牙>[wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0]链接失败
+javax.websocket.DeploymentException: The HTTP request to initiate the WebSocket connection to [wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0] failed
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServerRecursive(WsWebSocketContainer.java:490)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServer(WsWebSocketContainer.java:197)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServer(WsWebSocketContainer.java:154)
+	at com.yqlyy.GameYqlyyWsClient.connect(GameYqlyyWsClient.java:294)
+	at com.yqlyy.GameYqlyyWsClient.report(GameYqlyyWsClient.java:303)
+	at com.dwydh.DwydhService.lambda$init$0(DwydhService.java:28)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.InterruptedException: null
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.doAcquireSharedNanos(AbstractQueuedSynchronizer.java:1039)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.tryAcquireSharedNanos(AbstractQueuedSynchronizer.java:1328)
+	at java.util.concurrent.CountDownLatch.await(CountDownLatch.java:277)
+	at org.apache.tomcat.websocket.AsyncChannelWrapperSecure$WrapperFuture.get(AsyncChannelWrapperSecure.java:513)
+	at org.apache.tomcat.websocket.WsWebSocketContainer.connectToServerRecursive(WsWebSocketContainer.java:341)
+	... 8 common frames omitted
