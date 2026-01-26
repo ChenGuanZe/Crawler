@@ -93,19 +93,19 @@ public class ApplicationRunnerImpl implements ApplicationRunner {
 //        });
 
 
-        //---------------- 古城数据-屠龙 --------------------
-//        taskExecutor.execute(() -> {
-//            try {
-//                startGcSocket();
-//            } catch (InterruptedException e) {
-//                log.info("古城-socket发送消息报错1：{}", e.getMessage());
-//                try {
-//                    startGcSocket();
-//                } catch (InterruptedException ex) {
-//                    log.info("古城-socket发送消息报错2：{}", ex.getMessage());
-//                }
-//            }
-//        });
+        // ---------------- 古城数据-屠龙 --------------------
+    //    taskExecutor.execute(() -> {
+    //        try {
+    //            startGcSocket();
+    //        } catch (InterruptedException e) {
+    //            log.info("古城-socket发送消息报错1：{}", e.getMessage());
+    //            try {
+    //                startGcSocket();
+    //            } catch (InterruptedException ex) {
+    //                log.info("古城-socket发送消息报错2：{}", ex.getMessage());
+    //            }
+    //        }
+    //    });
 
         //---------------- 幽林数据-幽林唱唱 --------------------
 //        taskExecutor.execute(() -> {

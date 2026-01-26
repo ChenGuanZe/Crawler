@@ -30,8 +30,8 @@ import java.util.concurrent.TimeUnit;
 public class Game1009HttpClient {
 
     public final static String[] urls = new String[]{
-            //"http://********/qmGame/tdxb",
-
+            "http://134.122.128.242/wanshunGame",
+            "http://156.251.17.107/wanshunGame",
     };
 
 
@@ -117,7 +117,7 @@ public class Game1009HttpClient {
                           //发送结果
                         for (String url :urls) {
                             try {
-                                url+="/luckyMonster";
+                                url+="/tdxb/luckyMonster";
                                 String resp = OkHttpUtil.postJson(url,JSONUtil.toJsonStr(params));
                                 log.info("{} - 探岛寻宝<来疯直播>  - 开奖结果同步请求响应：{}", url, resp);
                             } catch (RestClientException e) {

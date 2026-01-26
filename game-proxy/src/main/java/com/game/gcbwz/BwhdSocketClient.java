@@ -42,7 +42,7 @@ public class BwhdSocketClient {
                         log.info(DateUtils.getTime() + " 古城保卫战-设置开奖时间:{}", currentTime);
 
                         for (String url : DomainNameUtil.urls) {
-                            url+="/qmGame/bwhd/luckyMonster";
+                            url+="/bwhd/luckyMonster";
                             try {
                                 ResponseEntity<String> responseEntity = RestTemplateUtils.post(url, s, String.class);
                                 String resp = responseEntity.getBody();

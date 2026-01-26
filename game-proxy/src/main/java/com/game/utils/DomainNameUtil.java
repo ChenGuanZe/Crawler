@@ -2,7 +2,7 @@ package com.game.utils;
 
 public class DomainNameUtil {
     public final static String[] urls = new String[]{
-            "http://134.122.128.242/game",
+            "http://134.122.128.242/wanshunGame",
            "http://156.251.17.107/wanshunGame",
         //    "http://47.242.112.200/qmGame",
         //    "http://8.210.135.202/qmGame",

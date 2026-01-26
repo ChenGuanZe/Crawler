@@ -86,7 +86,7 @@ public class YlbwzWebSocketClient extends WebSocketClient {
 
 
                 for (String url : DomainNameUtil.urls) {
-                    url+="/qmGame/ylbwz/luckyMonster";
+                    url+="/ylbwz/luckyMonster";
                     try {
                         ResponseEntity<String> responseEntity = RestTemplateUtils.post(url, s, String.class);
                         String resp = responseEntity.getBody();

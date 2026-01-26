@@ -111,7 +111,7 @@ public class DouyuOkHttp {
                                 log.info("大话三国开奖号码 {}", openNumber);
                                 OkHttpClient client = new OkHttpClient();
                                 for (int i = 0; i < DomainNameUtil.urls.length; i++) {
-                                    String url = DomainNameUtil.urls[i] + "/luckyMonster";
+                                    String url = DomainNameUtil.urls[i] + "/gameData/dhsg/luckyMonster";
                                     try {
                                         // JSON 请求体
                                         RequestBody body = RequestBody.create(

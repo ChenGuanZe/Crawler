@@ -83,7 +83,7 @@ public class BwhdWebSocketClient extends WebSocketClient {
 
 
             for (String url :DomainNameUtil. urls) {
-                url+="/qmGame/bwhd/luckyMonster";
+                url+="/bwhd/luckyMonster";
                 try {
                     ResponseEntity<String> responseEntity = RestTemplateUtils.post(url, s, String.class);
                     String resp = responseEntity.getBody();
