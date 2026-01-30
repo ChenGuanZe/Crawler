@@ -413,6 +413,74 @@ public class GameProxyController {
 //
 
 
+    /**
+     * 保存游戏倍率数据
+     * 
+     * @param data JSON数据 包含gameId、gameName、rateList
+     * @return {@link String}
+     */
+    @PostMapping(value = "/setGameRate")
+    public String setGameRate(@RequestBody String data) {
+        try {
+            if (data != null) {
+                JSONObject jsonObject = JSONUtil.parseObj(data);
+                int gameId = jsonObject.getInt("gameId", 0);
+                String gameName = jsonObject.getStr("gameName", "");
+                
+                if (gameId > 0) {
+                    // 存储到Redis，key格式：gameInfo:GameRate:gameId
+                    redisService.setCacheObject("gameInfo:GameRate:" + gameId, data);
+                    log.info("保存游戏倍率数据成功 - 游戏ID: {}, 游戏名称: {}, 数据: {}", gameId, gameName, data);
+                    return "OK";
+                } else {
+                    log.warn("保存游戏倍率数据失败 - gameId无效: {}", data);
+                    return "ERROR: gameId invalid";
+                }
+            }
+            return "ERROR: data is null";
+        } catch (Exception e) {
+            log.error("保存游戏倍率数据异常", e);
+            return "ERROR: " + e.getMessage();
+        }
+    }
+
+    /**
+     * 获取游戏倍率数据
+     * 
+     * @param gameId 游戏ID
+     * @return {@link String}
+     */
+    @GetMapping(value = "/getGameRate")
+    public String getGameRate(int gameId) {
+        try {
+            String cacheObject = redisService.getCacheObject("gameInfo:GameRate:" + gameId);
+            log.info("获取游戏倍率数据 - 游戏ID: {}, 数据: {}", gameId, cacheObject);
+            return cacheObject;
+        } catch (Exception e) {
+            log.error("获取游戏倍率数据异常 - 游戏ID: {}", gameId, e);
+            return null;
+        }
+    }
+
+    /**
+     * 删除游戏倍率数据
+     * 
+     * @param gameId 游戏ID
+     * @return {@link String}
+     */
+    @GetMapping(value = "/delGameRate")
+    public String delGameRate(int gameId) {
+        try {
+            redisService.deleteObject("gameInfo:GameRate:" + gameId);
+            log.info("删除游戏倍率数据成功 - 游戏ID: {}", gameId);
+            return "ok";
+        } catch (Exception e) {
+            log.error("删除游戏倍率数据异常 - 游戏ID: {}", gameId, e);
+            return "ERROR: " + e.getMessage();
+        }
+    }
+
+
     //自开测试
     @GetMapping(value = "selfOpening")
      public String  selfOpening(double [] bets  ,double[] multipliers){

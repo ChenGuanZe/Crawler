@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Base64;
+import java.util.List;
 
 @ClientEndpoint
 public class GameYqlyyWsClient {
@@ -50,10 +51,10 @@ public class GameYqlyyWsClient {
 
     @OnMessage
     public void binaryMessage(Session session, ByteBuffer msg) {
-       // logger.info("[一千零一夜<虎牙>]收到的binaryMessage消息: {}", msg);
+        // logger.info("[一千零一夜<虎牙>]收到的binaryMessage消息: {}", msg);
 
         byte[] byteArray = msg.array();
-       // logger.info("一千零一夜<虎牙>]收到的binaryMessage消息: {}", Base64.getEncoder().encodeToString(byteArray));
+        // logger.info("一千零一夜<虎牙>]收到的binaryMessage消息: {}", Base64.getEncoder().encodeToString(byteArray));
 //        for (byte b : byteArray) {
 //            System.out.print(b + " ");
 //        }
@@ -61,18 +62,18 @@ public class GameYqlyyWsClient {
         TarsInputStream inputStream = new TarsInputStream(msg.array());
         WsCmd cmd = new WsCmd();
         cmd.setiCmdType(inputStream.read(cmd.getiCmdType(), 0, false));
-      //  logger.info("[一千零一夜<虎牙>]收到的binaryMessage消息指令: {}", cmd.getiCmdType());
+        //  logger.info("[一千零一夜<虎牙>]收到的binaryMessage消息指令: {}", cmd.getiCmdType());
         if (cmd.getiCmdType() != 7) {
             return;
         }
         byte[] vData = inputStream.read(cmd.getvData(), 1, false);
         inputStream = new TarsInputStream(vData);
         BussesCmd bussesCmd = new BussesCmd();
-      //  System.out.println("一千零一夜<虎牙>ePushType is:" + inputStream.read(bussesCmd.ePushType, 0, false));
+        //  System.out.println("一千零一夜<虎牙>ePushType is:" + inputStream.read(bussesCmd.ePushType, 0, false));
         bussesCmd.iUri = inputStream.read(bussesCmd.iUri, 1, false);
-     //   System.out.println("一千零一夜<虎牙>iUri is:" + bussesCmd.iUri);
+        //   System.out.println("一千零一夜<虎牙>iUri is:" + bussesCmd.iUri);
         bussesCmd.sMsg = inputStream.read(bussesCmd.sMsg, 2, false);
-       // System.out.println("一千零一夜<虎牙>sMsg is:" + bussesCmd.sMsg.length);
+        // System.out.println("一千零一夜<虎牙>sMsg is:" + bussesCmd.sMsg.length);
         if (bussesCmd.iUri == 7109) {
             System.out.println(">>>>>>>7109>>>>>>>>");
             OpenTreasureHunter openTreasureHunter = new OpenTreasureHunter();
@@ -88,7 +89,7 @@ public class GameYqlyyWsClient {
 
                 JSONArray jsonArray=new JSONArray();
                 for(int i=0;i<openTreasureHunter.getvTreasure().size();i++) {
-                   int iTreasureId=((TreasureHunterInfoItem) openTreasureHunter.getvTreasure().get(i)).getiTreasureId();
+                    int iTreasureId=((TreasureHunterInfoItem) openTreasureHunter.getvTreasure().get(i)).getiTreasureId();
                     String sTreasureName=((TreasureHunterInfoItem) openTreasureHunter.getvTreasure().get(i)).getsTreasureName();
                     System.out.println("一千零一夜<虎牙>开奖动物name：" + sTreasureName);
                     System.out.println("一千零一夜<虎牙>夜开奖动物id：" + iTreasureId);
@@ -194,8 +195,45 @@ public class GameYqlyyWsClient {
             System.out.println("[宠物马拉松<虎牙>]游戏gameStartData.getlOldRoundIndexTime()：" +OldRoundIndexTime );
             System.out.println("[宠物马拉松<虎牙>]游戏gameStartData.getlOldRoundIndexEndTime()：" +OldRoundIndexEndTime);
             System.out.println(inputStream.read(gameStartData.getlOldRoundId(), 3, false));
-
-
+            //获取游戏开奖赔率开始
+            OpenTreasureHunter openTreasureHunter=new OpenTreasureHunter();
+            List<TreasureHunterInfoItem> list =(List<TreasureHunterInfoItem>)inputStream.read(openTreasureHunter.getvTreasure(),8,false);
+            //System.out.println(inputStream.read(treasureHunterInfo.getValue(),8,false));
+            
+            // 构建倍率数据JSON
+            JSONArray rateArray = new JSONArray();
+            for(int i=1;i<list.size();i++){
+                TreasureHunterInfoItem item=list.get(i);
+                System.out.println("游戏开奖倍率-----"+item.getiRate() +" name is :"+item.sTreasureName +" is is :"+item.iTreasureId);
+                
+                JSONObject rateItem = new JSONObject();
+                rateItem.set("monsterId", item.iTreasureId);
+                rateItem.set("monsterName", item.sTreasureName);
+                rateItem.set("rate", item.getiRate());
+                rateArray.add(rateItem);
+            }
+            
+            // 直接推送倍率数据到第三方业务系统
+            if (!rateArray.isEmpty()) {
+                JSONObject rateData = new JSONObject();
+                rateData.set("gameId", 22);
+                rateData.set("gameName", "宠物马拉松");
+                rateData.set("rateList", rateArray);
+                
+                for (String url : DomainNameUtil.urls) {
+                    try {
+                        String rateUrl = url + "/mls/gameRate";
+                        ResponseEntity<String> responseEntity = restTemplateUtils.post(rateUrl, rateData.toString(), String.class);
+                        String resp = responseEntity.getBody();
+                        logger.info("{} - 虎牙-宠物马拉松 - 推送倍率数据响应：{}", rateUrl, resp);
+                    } catch (RestClientException e) {
+                        logger.warn("{} - 虎牙-宠物马拉松 - 推送倍率数据异常：{}", url, e.getMessage());
+                    } catch (Exception e) {
+                        logger.error("虎牙-宠物马拉松-推送倍率数据异常", e);
+                    }
+                }
+            }
+            //获取游戏开奖赔率结束
 
 
             //发送中转爬虫服务器
@@ -284,7 +322,7 @@ public class GameYqlyyWsClient {
         try {
             session.getBasicRemote().sendBinary(buffer);
         } catch (IOException e) {
-               e.printStackTrace();
+            e.printStackTrace();
             connect();
         }
     }
