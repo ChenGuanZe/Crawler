@@ -199,27 +199,32 @@ public class GameYqlyyWsClient {
             OpenTreasureHunter openTreasureHunter=new OpenTreasureHunter();
             List<TreasureHunterInfoItem> list =(List<TreasureHunterInfoItem>)inputStream.read(openTreasureHunter.getvTreasure(),8,false);
             //System.out.println(inputStream.read(treasureHunterInfo.getValue(),8,false));
-            
+
             // 构建倍率数据JSON
             JSONArray rateArray = new JSONArray();
             for(int i=1;i<list.size();i++){
                 TreasureHunterInfoItem item=list.get(i);
-                System.out.println("游戏开奖倍率-----"+item.getiRate() +" name is :"+item.sTreasureName +" is is :"+item.iTreasureId);
-                
+
+                int rawRate = item.getiRate();
+                int mappedRate = mapRateOnlyForMarathon(22, rawRate);
+
+                System.out.println("游戏开奖倍率(raw->mapped)-----" + rawRate + "->" + mappedRate + " name is :" + item.sTreasureName + " id is :" + item.iTreasureId);
+
                 JSONObject rateItem = new JSONObject();
                 rateItem.set("monsterId", item.iTreasureId);
                 rateItem.set("monsterName", item.sTreasureName);
-                rateItem.set("rate", item.getiRate());
+                rateItem.set("rawRate", rawRate);
+                rateItem.set("rate", mappedRate);
                 rateArray.add(rateItem);
             }
-            
+
             // 直接推送倍率数据到第三方业务系统
             if (!rateArray.isEmpty()) {
                 JSONObject rateData = new JSONObject();
                 rateData.set("gameId", 22);
                 rateData.set("gameName", "宠物马拉松");
                 rateData.set("rateList", rateArray);
-                
+
                 for (String url : DomainNameUtil.urls) {
                     try {
                         String rateUrl = url + "/mls/gameRate";
@@ -343,6 +348,32 @@ public class GameYqlyyWsClient {
 //            }
 //        }
 //    }
+
+    /**
+     * 倍率映射（仅对宠物马拉松生效，gameId==22）：
+     * 3->2, 6->5, 9->8, 18->17
+     * 其他倍率保持不变
+     */
+    private static int mapRateOnlyForMarathon(int gameId, int rate) {
+        if (gameId != 22) {
+            return rate; // 非马拉松不映射
+        }
+        switch (rate) {
+            case 3:
+                return 2;
+            case 6:
+                return 5;
+            case 9:
+                return 8;
+            case 18:
+                return 17;
+            default:
+                return rate;
+        }
+    }
+
+
+
 
 
     public static String aesBase64ByCBC(String sSrc, String sKey, String vector) {
