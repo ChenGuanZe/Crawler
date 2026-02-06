@@ -89,7 +89,7 @@ public class GameYqlyyWsClient {
 
                 JSONArray jsonArray=new JSONArray();
                 for(int i=0;i<openTreasureHunter.getvTreasure().size();i++) {
-                    int iTreasureId=((TreasureHunterInfoItem) openTreasureHunter.getvTreasure().get(i)).getiTreasureId();
+                    int iTreasureId=((TreasureHunterInfoItem) openTreasureHunter.getvTreasure().get(i)).getiTreasureId()-1;
                     String sTreasureName=((TreasureHunterInfoItem) openTreasureHunter.getvTreasure().get(i)).getsTreasureName();
                     System.out.println("一千零一夜<虎牙>开奖动物name：" + sTreasureName);
                     System.out.println("一千零一夜<虎牙>夜开奖动物id：" + iTreasureId);
