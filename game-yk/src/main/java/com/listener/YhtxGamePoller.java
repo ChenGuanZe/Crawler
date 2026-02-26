@@ -70,15 +70,20 @@ public class YhtxGamePoller {
 
                     if (lastXqTimeId != null && currentXqTimeId != lastXqTimeId) {
                         log.info("{} - XQtimeid变化: {} -> {}", GAME_NAME, lastXqTimeId, currentXqTimeId);
+                        log.info("{} - 原始响应数据: {}", GAME_NAME, responseBody);
 
-                        // 获取开奖结果
-                        JsonNode winnerNode = root.path("BQwin").size() > 0
-                                ? root.path("BQwin").get(0)
+                        JsonNode bqWinNode = root.path("BQwin");
+                        log.info("{} - BQwin节点类型: {}, 内容: {}", GAME_NAME, bqWinNode.getNodeType(), bqWinNode);
+
+                        JsonNode winnerNode = bqWinNode.size() > 0
+                                ? bqWinNode.get(0)
                                 : null;
 
                         if (winnerNode != null) {
-                            // 发送开奖结果到第三方
+                            log.info("{} - winnerNode类型: {}, 内容: {}, asInt: {}", GAME_NAME, winnerNode.getNodeType(), winnerNode, winnerNode.asInt());
                             sendLotteryResult(winnerNode);
+                        } else {
+                            log.warn("{} - BQwin为空，无法获取开奖结果", GAME_NAME);
                         }
 
                         // 发送下期游戏开始时间
@@ -99,15 +104,17 @@ public class YhtxGamePoller {
      */
     private void sendLotteryResult(JsonNode winnerNode) {
         try {
-            int winnerId = winnerNode.asInt();
+            int winnerId = winnerNode.has("Pid") ? winnerNode.get("Pid").asInt() : winnerNode.asInt();
+            log.info("{} - 解析开奖号码: Pid={}, 原始节点: {}", GAME_NAME, winnerId, winnerNode);
 
             Map<String, Object> params = new HashMap<>();
-            params.put("gameSucc", winnerId);  // 字段名改为 gameSucc
+            params.put("gameSucc", winnerId);
 
             String jsonParams = mapper.writeValueAsString(params);
-
+            log.error("{} - 推送的开奖数据", params);
             for (String url : DomainNameUtil.urls) {
                 try {
+
                     String fullUrl = url + "/yhtx/luckyMonster";  // 接口路径改为 yhtx
                     String resp = OkHttpUtil.postJson(fullUrl, jsonParams);
                     log.info("{} - 开奖结果同步请求响应：{} => {}", GAME_NAME, fullUrl, resp);
