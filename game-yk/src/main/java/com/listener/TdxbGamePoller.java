@@ -12,20 +12,21 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 灵宠召唤 游戏轮询器
+ * 探岛寻宝 游戏轮询器（新版）
  */
 @Slf4j
-public class LczhGamePoller {
+public class TdxbGamePoller {
 
-    private static final String GAME_NAME = "灵宠召唤";
-    private static final int GAME_ID = 30;  // TODO: 根据实际情况修改 gameId
+    private static final String GAME_NAME = "探岛寻宝";
+    private static final int GAME_ID = 29;
 
     private static final String URL = "https://m.zhyy.net/api/game/gameApis";
 
     private static final String PAYLOAD_JSON =
-            "{\"data\":\"i0/j6KrTBDNppC7QsyBwr6sTvv56ALWn8LE+vnGOw8Na+miJYUjVMdanPbORWMbcbO5qaByTJslkwDmC6/LCT/rmLWeRyUX1LmdF+i9/4/BDEAV0uy608qUv5ySKhrVc\"}";
+            "{\"data\":\"i0/j6KrTBDNppC7QsyBwr6sTvv56ALWn8LE+vnGOw8Na+miJYUjVMdanPbORWMbcg5FKkw2bbMK36g+bQ7VODUhW2oXo18WqrExLFPfC7CdB2LbDzRBp0OtzQP4q8zE+\"}";
 
-    private static final String COOKIE = "aws-waf-token=6ec895b2-7be1-4d01-9536-f772bc454e86:BgoAugFV2K03AAAA:SN1ALgU3Rxz5zpbIdXmFKiL26SdWrvGZQMubns+w3VZ6dF5J77F/NIQD28lywK0hXbnSTaY0CbuOEFmcLZqzjm4jAz3PV8Yt1YJm3Sqifk3a+2nhGtbUUJNikkWqSITsIRCNzcDpuu3G6qLed6FhT8fXtlv2E1QEl1dWb05OAcYaAgTGzi0ySI6Pu/M7YEdccZC/jEbYMAAOSu/ASJU08LD9zg90Por7J/Rv/vJkKNCpWKr2iNrbQ/o85Kw=; language=zh-CN; token=0wUAAGVkYWYzODg0MzdjZjA1ODRhZDUyNDM5NzM3NjNkNzJk; i18n_redirected=zh-CN";
+    private static final String COOKIE =
+            "aws-waf-token=6ec895b2-7be1-4d01-9536-f772bc454e86:BgoAjvpXb5c+AAAA:yc2uENdPfKvMoTg0XncUwPyFvXJ91QBFa36V7N7aeudI7RVk2H+V51dItWUY7aqElUkyVN5ZqnTHPbdbEUW4n5rcHxYjQDNXkzM9uWnz5Nqew83/FuGMD4YuoIroRZAAH2xtJmMGBgZItmn/eXhUHuSgSa/C/GGaNNfxDlcd28uErY5ILkinQ/sufW2A52Jqr6wRLw307BeqlQpBBthr4+s8sfEQD6NFZvgcv0x/wgSyAMfdIqvB1mgFVUc=; token=1QUAADE1NTMzN2VmNWQxOGE4YmU5YmY2MTJmZWQxMTQ2ZTll; i18n_redirected=zh-CN";
 
     private static final MediaType JSON_TYPE = MediaType.parse("application/json; charset=utf-8");
 
@@ -33,7 +34,7 @@ public class LczhGamePoller {
     private final ObjectMapper mapper;
     private Long lastXqTimeId = null;
 
-    public LczhGamePoller() {
+    public TdxbGamePoller() {
         this.client = new OkHttpClient.Builder()
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(10, TimeUnit.SECONDS)
@@ -68,11 +69,7 @@ public class LczhGamePoller {
                 if (xqNode != null && !xqNode.isNull()) {
                     long currentXqTimeId = xqNode.asLong();
 
-                    if (lastXqTimeId == null) {
-                        // 首次启动：不推送但要记录 baseline，避免重启时把当前正在进行的那期当成新期推送
-                        log.info("{} - 首次启动，记录 baseline XQtimeid={}", GAME_NAME, currentXqTimeId);
-                        lastXqTimeId = currentXqTimeId;
-                    } else if (currentXqTimeId != lastXqTimeId) {
+                    if (lastXqTimeId != null && currentXqTimeId != lastXqTimeId) {
                         log.info("{} - XQtimeid变化: {} -> {}", GAME_NAME, lastXqTimeId, currentXqTimeId);
                         log.info("{} - 原始响应数据: {}", GAME_NAME, responseBody);
 
@@ -83,24 +80,17 @@ public class LczhGamePoller {
                                 ? bqWinNode.get(0)
                                 : null;
 
-                        boolean pushOk = false;
                         if (winnerNode != null) {
                             log.info("{} - winnerNode类型: {}, 内容: {}, asInt: {}", GAME_NAME, winnerNode.getNodeType(), winnerNode, winnerNode.asInt());
-                            pushOk = sendLotteryResult(winnerNode);
+                            sendLotteryResult(winnerNode);
                         } else {
                             log.warn("{} - BQwin为空，无法获取开奖结果", GAME_NAME);
                         }
 
-                        // 发送下期游戏开始时间（独立于开奖推送）
                         sendGameTime();
-
-                        // 只有推送成功才前进 baseline；失败则保留旧 lastXqTimeId，下一轮重试
-                        if (pushOk) {
-                            lastXqTimeId = currentXqTimeId;
-                        } else {
-                            log.warn("{} - 推送失败，保留 lastXqTimeId={} 下一轮重试当前期 {}", GAME_NAME, lastXqTimeId, currentXqTimeId);
-                        }
                     }
+
+                    lastXqTimeId = currentXqTimeId;
                 }
             }
 
@@ -110,41 +100,51 @@ public class LczhGamePoller {
     }
 
     /**
-     * 发送开奖结果到第三方
-     * @return 是否至少有一个目标推送成功
+     * 老版本 rewardId -> monsterId 映射（来疯直播原始ID对应关系）
+     * 如果新平台返回的值已经是 1-8，则不会命中映射，直接用原值
      */
-    private boolean sendLotteryResult(JsonNode winnerNode) {
-        boolean anySuccess = false;
+    private int mapMonsterId(int rawId) {
+        switch (rawId) {
+            case 698: return 8;  // 凤舞
+            case 699: return 7;  // 黑石
+            case 700: return 2;  // 蓝海
+            case 701: return 1;  // 龙鳞
+            case 702: return 6;  // 绿洲岛
+            case 703: return 5;  // 梦境岛
+            case 704: return 4;  // 银月岛
+            case 705: return 3;  // 紫烟岛
+            default: return rawId;
+        }
+    }
+
+    private void sendLotteryResult(JsonNode winnerNode) {
         try {
-            int winnerId = winnerNode.has("Pid") ? winnerNode.get("Pid").asInt() : winnerNode.asInt();
-            log.info("{} - 解析开奖号码: Pid={}, 原始节点: {}", GAME_NAME, winnerId, winnerNode);
+            int rawId = winnerNode.has("Pid") ? winnerNode.get("Pid").asInt() : winnerNode.asInt();
+            int monsterId = mapMonsterId(rawId);
+            log.info("{} - 原始开奖ID: {}, 映射后monsterId: {}, 原始节点: {}", GAME_NAME, rawId, monsterId, winnerNode);
 
             Map<String, Object> params = new HashMap<>();
-            params.put("gameSucc", winnerId);
+            params.put("monsterId", monsterId);
+            params.put("code", 1);
 
             String jsonParams = mapper.writeValueAsString(params);
-
+            log.info("发送开奖数据==》{}", jsonParams);
             for (String url : DomainNameUtil.urls) {
-                String fullUrl = url + "/lczh/luckyMonster2";  // 接口路径改为 luckyMonster2
                 try {
+                    String fullUrl = url + "/tdxb/luckyMonster";
                     String resp = OkHttpUtil.postJson(fullUrl, jsonParams);
                     log.info("{} - 开奖结果同步请求响应：{} => {}", GAME_NAME, fullUrl, resp);
-                    anySuccess = true;
                 } catch (Exception e) {
-                    log.warn("{} - 开奖结果同步请求异常：{} => {}", GAME_NAME, fullUrl, e.getMessage());
+                    log.warn("{} - 开奖结果同步请求异常：{}", GAME_NAME, e.getMessage());
                 }
             }
         } catch (Exception e) {
             log.error("{} - 发送开奖结果异常", GAME_NAME, e);
         }
-        return anySuccess;
     }
 
-    /**
-     * 发送游戏开始时间
-     */
     private void sendGameTime() {
-        long opentime = System.currentTimeMillis() + 60 * 1000;  // 当前时间 + 60秒
+        long opentime = System.currentTimeMillis() + 60 * 1000;  // 当前时间 + 60秒（新版本）
 
         for (String url : DomainNameUtil.transitUrls) {
             try {

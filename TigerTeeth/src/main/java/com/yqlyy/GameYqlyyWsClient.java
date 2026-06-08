@@ -26,6 +26,7 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @ClientEndpoint
 public class GameYqlyyWsClient {
@@ -33,10 +34,22 @@ public class GameYqlyyWsClient {
     public  RestTemplateUtils restTemplateUtils;
 
     private static final Logger logger = LoggerFactory.getLogger(GameYqlyyWsClient.class);
+
+    /** 推送重试次数 */
+    private static final int PUSH_RETRY = 3;
+    /** 推送每次重试间隔 ms */
+    private static final long PUSH_RETRY_INTERVAL_MS = 1000L;
+
     String wsUrl = "wss://3b258d37-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0";
     //String wsUrl="wss://0e776a5d-ws.va.huya.com/?baseinfo=DBYgMGE3ZDUwNmYwNjRjMDA2OTY0MDIxN2E3MThhNzA3OWMmGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0NgxIVVlBJlpIJjIwNTJGAFYvMTY1ODIuMjUzMzYsNDQyOTkuNzY5NDksNDYzOTIuODIxMDYsNDkwMjMuODgwMTBsdgCGAJYAqAACBghIVVlBX05FVBYBMAYLSFVZQV9WU0RLVUEWGndlYmg1JjI1MTAzMDEwNDkmd2Vic29ja2V0";
     private int messageId = 1;
     private Session session;
+    private volatile boolean needReconnect = false;
+
+    /** 最后一次收到 7109/7103 开奖类消息的时间戳；用于检测虎牙订阅是否还活着 */
+    private volatile long lastOpenMessageTime = System.currentTimeMillis();
+    /** 最后一次收到任何 binaryMessage 的时间戳；用于区分"完全断流"和"只是订阅丢失" */
+    private volatile long lastAnyMessageTime = System.currentTimeMillis();
 
     public GameYqlyyWsClient(RestTemplateUtils restTemplateUtils){
         this.restTemplateUtils=restTemplateUtils;
@@ -52,6 +65,7 @@ public class GameYqlyyWsClient {
     @OnMessage
     public void binaryMessage(Session session, ByteBuffer msg) {
         // logger.info("[一千零一夜<虎牙>]收到的binaryMessage消息: {}", msg);
+        lastAnyMessageTime = System.currentTimeMillis();
 
         byte[] byteArray = msg.array();
         // logger.info("一千零一夜<虎牙>]收到的binaryMessage消息: {}", Base64.getEncoder().encodeToString(byteArray));
@@ -71,28 +85,23 @@ public class GameYqlyyWsClient {
         BussesCmd bussesCmd = new BussesCmd();
         //  System.out.println("一千零一夜<虎牙>ePushType is:" + inputStream.read(bussesCmd.ePushType, 0, false));
         bussesCmd.iUri = inputStream.read(bussesCmd.iUri, 1, false);
-        //   System.out.println("一千零一夜<虎牙>iUri is:" + bussesCmd.iUri);
         bussesCmd.sMsg = inputStream.read(bussesCmd.sMsg, 2, false);
-        // System.out.println("一千零一夜<虎牙>sMsg is:" + bussesCmd.sMsg.length);
+        if (bussesCmd.iUri != 7109 && bussesCmd.iUri != 7107 && bussesCmd.iUri != 7103 && bussesCmd.iUri != 7101) {
+            logger.info("[虎牙] 未处理的iUri={}, sMsg长度={}, 时间={}", bussesCmd.iUri, bussesCmd.sMsg != null ? bussesCmd.sMsg.length : 0, System.currentTimeMillis());
+        }
         if (bussesCmd.iUri == 7109) {
-            System.out.println(">>>>>>>7109>>>>>>>>");
+            lastOpenMessageTime = System.currentTimeMillis();
+            logger.info("[虎牙-一千零一夜] 收到开奖消息 iUri=7109");
             OpenTreasureHunter openTreasureHunter = new OpenTreasureHunter();
             inputStream = new TarsInputStream(bussesCmd.sMsg);
             openTreasureHunter.readFrom(inputStream);
-//            System.out.println(inputStream.read(openTreasureHunter.getlOldRoundId(), 0, false));
-//            bussesCmd.sMsg=inputStream.read(bussesCmd.sMsg,2,false);
-//            System.out.println(inputStream.read(openTreasureHunter.getvTreasure(), 4, false));
             if(openTreasureHunter.getvTreasure()!=null && openTreasureHunter.getvTreasure().size()>0){
-
-
-
 
                 JSONArray jsonArray=new JSONArray();
                 for(int i=0;i<openTreasureHunter.getvTreasure().size();i++) {
                     int iTreasureId=((TreasureHunterInfoItem) openTreasureHunter.getvTreasure().get(i)).getiTreasureId()-1;
                     String sTreasureName=((TreasureHunterInfoItem) openTreasureHunter.getvTreasure().get(i)).getsTreasureName();
-                    System.out.println("一千零一夜<虎牙>开奖动物name：" + sTreasureName);
-                    System.out.println("一千零一夜<虎牙>夜开奖动物id：" + iTreasureId);
+                    logger.info("[虎牙-一千零一夜] 开奖动物 name={}, id={}", sTreasureName, iTreasureId);
                     JSONObject jsonObject=new JSONObject();
                     jsonObject.set("monsterId",iTreasureId);
                     jsonObject.set("monsterName",sTreasureName);
@@ -101,17 +110,10 @@ public class GameYqlyyWsClient {
                 if (!jsonArray.isEmpty()){
                     JSONObject jsonObject=new JSONObject();
                     jsonObject.set("data",jsonArray);
+                    final String body = jsonObject.toString();
                     for (String url : DomainNameUtil.urls) {
-                        try {
-                            url+="/yqlyy/luckyMonster";
-                            ResponseEntity<String> responseEntity = restTemplateUtils.post(url, jsonObject.toString(), String.class);
-                            String resp = responseEntity.getBody();
-                            logger.info("{} - 虎牙-一千零一夜 - 开奖结果同步请求响应：{}", url, resp);
-                        } catch (RestClientException e) {
-                            logger.warn("{} - 虎牙-一千零一夜 - 开奖结果同步请求异常：{}", url, e.getMessage());
-                        } catch (Exception e) {
-                            logger.error("虎牙-一千零一夜-同步开奖结果异常", e);
-                        }
+                        final String pushUrl = url + "/yqlyy/luckyMonster";
+                        CompletableFuture.runAsync(() -> postWithRetry(pushUrl, body, "虎牙-一千零一夜-开奖"));
                     }
 
                 }
@@ -149,36 +151,26 @@ public class GameYqlyyWsClient {
 
 
         }else if (bussesCmd.iUri == 7103) {
-            System.out.println(">>>>>>>7103>>>>>>>>");
+            lastOpenMessageTime = System.currentTimeMillis();
+            logger.info("[虎牙-宠物马拉松] 收到开奖消息 iUri=7103");
             OpenTreasureHunter openTreasureHunter = new OpenTreasureHunter();
             inputStream = new TarsInputStream(bussesCmd.sMsg);
             openTreasureHunter.readFrom(inputStream);
-//            System.out.println(inputStream.read(openTreasureHunter.getlOldRoundId(), 0, false));
-//            bussesCmd.sMsg=inputStream.read(bussesCmd.sMsg,2,false);
-//            System.out.println(inputStream.read(openTreasureHunter.getvTreasure(), 4, false));
             if(openTreasureHunter.getvTreasure()!=null && !openTreasureHunter.getvTreasure().isEmpty()){
 
                 int iTreasureId=((TreasureHunterInfoItem)openTreasureHunter.getvTreasure().get(0)).getiTreasureId();
                 String sTreasureName=((TreasureHunterInfoItem)openTreasureHunter.getvTreasure().get(0)).getsTreasureName();
-                System.out.println("[宠物马拉松<虎牙>]游戏开局动物name："+sTreasureName);
-                System.out.println("[宠物马拉松<虎牙>]游戏开局动物id："+iTreasureId);
+                logger.info("[虎牙-宠物马拉松] 开奖动物 name={}, id={}", sTreasureName, iTreasureId);
 
                 JSONObject jsonObject=new JSONObject();
                 jsonObject.set("monsterId",iTreasureId);
                 jsonObject.set("sTreasureName",sTreasureName);
 
 
+                final String body = jsonObject.toString();
                 for (String url : DomainNameUtil.urls) {
-                    try {
-                        url+="/mls/luckyMonster";
-                        ResponseEntity<String> responseEntity = restTemplateUtils.post(url, jsonObject.toString(), String.class);
-                        String resp = responseEntity.getBody();
-                        logger.info("{} - 虎牙-宠物马拉松 - 开奖结果同步请求响应：{}", url, resp);
-                    } catch (RestClientException e) {
-                        logger.warn("{} - 虎牙-宠物马拉松 - 开奖结果同步请求异常：{}", url, e.getMessage());
-                    } catch (Exception e) {
-                        logger.error("虎牙-宠物马拉松-同步开奖结果异常", e);
-                    }
+                    final String pushUrl = url + "/mls/luckyMonster";
+                    CompletableFuture.runAsync(() -> postWithRetry(pushUrl, body, "虎牙-宠物马拉松-开奖"));
                 }
 
             }
@@ -272,9 +264,9 @@ public class GameYqlyyWsClient {
         logger.info("[<虎牙>] msg is:消息: {}", Base64.getEncoder().encodeToString(temp));
         ByteBuffer buffer = ByteBuffer.wrap(temp);
         try {
-            session.getBasicRemote().sendBinary(buffer);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            session.getAsyncRemote().sendBinary(buffer);
+        } catch (Exception e) {
+            logger.error("[<虎牙>]onOpen发送消息异常", e);
         }
 
     }
@@ -282,12 +274,86 @@ public class GameYqlyyWsClient {
 
     @OnClose
     public void onClose() {
-        logger.error("[<虎牙>]链接关闭!Close to server");
+        logger.error("[<虎牙>]链接关闭!Close to server，标记立即重连");
+        session = null;
+        needReconnect = true;
     }
 
     @OnError
     public void onError(Throwable e, Session session) {
-        logger.error("[<虎牙>]监听到异常", e);
+        logger.error("[<虎牙>]监听到异常，标记立即重连", e);
+        this.session = null;
+        needReconnect = true;
+    }
+
+    public boolean isNeedReconnect() {
+        return needReconnect;
+    }
+
+    public void clearReconnectFlag() {
+        needReconnect = false;
+    }
+
+    /** 距离最后一次收到开奖类消息(7109/7103)的毫秒数 */
+    public long getMsSinceLastOpenMessage() {
+        return System.currentTimeMillis() - lastOpenMessageTime;
+    }
+
+    /** 距离最后一次收到任何 WebSocket 二进制消息的毫秒数 */
+    public long getMsSinceLastAnyMessage() {
+        return System.currentTimeMillis() - lastAnyMessageTime;
+    }
+
+    /** 守护线程检测到订阅疑似失效时调用，强制关闭 session 触发重连 */
+    public synchronized void forceReconnect(String reason) {
+        logger.warn("[<虎牙>]主动强制重连，原因: {}", reason);
+        try {
+            if (session != null) {
+                session.close();
+            }
+        } catch (IOException ignored) {
+        }
+        session = null;
+        needReconnect = true;
+        // 重置时间戳，避免在新连接还没收消息时反复重连
+        lastOpenMessageTime = System.currentTimeMillis();
+        lastAnyMessageTime = System.currentTimeMillis();
+    }
+
+    /**
+     * 同步重试推送（在 CompletableFuture 内部调用，不阻塞 WebSocket 主线程）
+     * 业务异常/网络异常都重试，直到任一次成功或耗尽次数
+     */
+    private void postWithRetry(String url, String body, String tag) {
+        Exception lastEx = null;
+        for (int i = 1; i <= PUSH_RETRY; i++) {
+            try {
+                ResponseEntity<String> responseEntity = restTemplateUtils.post(url, body, String.class);
+                String resp = responseEntity.getBody();
+                if (i == 1) {
+                    logger.info("[{}] 推送成功 url={} resp={}", tag, url, resp);
+                } else {
+                    logger.warn("[{}] 重试第 {}/{} 次推送成功 url={} resp={}", tag, i, PUSH_RETRY, url, resp);
+                }
+                return;
+            } catch (RestClientException e) {
+                lastEx = e;
+                logger.warn("[{}] 推送失败 第{}/{}次 url={} err={}", tag, i, PUSH_RETRY, url, e.getMessage());
+            } catch (Exception e) {
+                lastEx = e;
+                logger.warn("[{}] 推送异常 第{}/{}次 url={} err={}", tag, i, PUSH_RETRY, url, e.getMessage());
+            }
+            if (i < PUSH_RETRY) {
+                try {
+                    Thread.sleep(PUSH_RETRY_INTERVAL_MS);
+                } catch (InterruptedException ignored) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+        }
+        logger.error("[{}] 推送最终失败({}次重试用尽) url={} lastErr={}", tag, PUSH_RETRY, url,
+                lastEx == null ? "null" : lastEx.getMessage());
     }
 
     private synchronized void connect() {
@@ -325,10 +391,11 @@ public class GameYqlyyWsClient {
         logger.info("[<虎牙>] msg is:消息 进入游戏: {}", Base64.getEncoder().encodeToString(temp));
         ByteBuffer buffer = ByteBuffer.wrap(temp);
         try {
-            session.getBasicRemote().sendBinary(buffer);
-        } catch (IOException e) {
-            e.printStackTrace();
-            connect();
+            session.getAsyncRemote().sendBinary(buffer);
+        } catch (Exception e) {
+            logger.error("[<虎牙>]report发送消息异常，准备重连", e);
+            session = null;
+            needReconnect = true;
         }
     }
 

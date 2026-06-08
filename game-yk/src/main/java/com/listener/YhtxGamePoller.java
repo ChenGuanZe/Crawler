@@ -18,14 +18,14 @@ import java.util.concurrent.TimeUnit;
 public class YhtxGamePoller {
 
     private static final String GAME_NAME = "银河探险";
-    private static final int GAME_ID = 31;  // TODO: 根据实际情况修改 gameId
+    private static final int GAME_ID = 31;
 
     private static final String URL = "https://m.zhyy.net/api/game/gameApis";
 
     private static final String PAYLOAD_JSON =
             "{\"data\":\"i0/j6KrTBDNppC7QsyBwr6sTvv56ALWn8LE+vnGOw8Na+miJYUjVMdanPbORWMbcilNpLi0ET1jOIe5q1DvyYEpG9aieTuLPjLhTa1xWH3hI3G7UvoFKU3duB5KSSgDf\"}";
 
-    private static final String COOKIE = "aws-waf-token=1c87d273-108e-4864-81b2-9b5139f0d246:BgoAb+00+PwAAAAA:wYVyoGWh/mII+qWp/Gqlhzc8sz2IagYpWf6wyI6vqjpAPADI3BEAqXgfQ/7BKVtd7NcvjsOAbGju5e+U0NU6S6dx9ZTWQjEm19+ijKN6AYAcwcN6ik/s8jXaUdk5krkj597mkGLT9ZrGWctWYgoYf7HUPqKbPA1KhYu3b+ez61kecl+CrBzBxm5m9zIWfu4YO7V2cF29K2bAdpjMIYbhS5t1mKxMISRXEa+B+uxM00NCGbY5P0y8qOPelsw=; language=zh-CN; token=Iw4AAGVkYWYzODg0MzdjZjA1ODRhZDUyNDM5NzM3NjNkNzJk; i18n_redirected=zh-CN";
+    private static final String COOKIE = "aws-waf-token=6ec895b2-7be1-4d01-9536-f772bc454e86:BgoAjvpXb5c+AAAA:yc2uENdPfKvMoTg0XncUwPyFvXJ91QBFa36V7N7aeudI7RVk2H+V51dItWUY7aqElUkyVN5ZqnTHPbdbEUW4n5rcHxYjQDNXkzM9uWnz5Nqew83/FuGMD4YuoIroRZAAH2xtJmMGBgZItmn/eXhUHuSgSa/C/GGaNNfxDlcd28uErY5ILkinQ/sufW2A52Jqr6wRLw307BeqlQpBBthr4+s8sfEQD6NFZvgcv0x/wgSyAMfdIqvB1mgFVUc=; token=1AUAAGZlODQxNzk1YzVjMTNhOWJjNjA3NzNkZGYzNzRlMzE4; i18n_redirected=zh-CN";
 
     private static final MediaType JSON_TYPE = MediaType.parse("application/json; charset=utf-8");
 
@@ -68,7 +68,11 @@ public class YhtxGamePoller {
                 if (xqNode != null && !xqNode.isNull()) {
                     long currentXqTimeId = xqNode.asLong();
 
-                    if (lastXqTimeId != null && currentXqTimeId != lastXqTimeId) {
+                    if (lastXqTimeId == null) {
+                        // 首次启动：不推送但要记录 baseline，避免重启时把当前正在进行的那期当成新期推送
+                        log.info("{} - 首次启动，记录 baseline XQtimeid={}", GAME_NAME, currentXqTimeId);
+                        lastXqTimeId = currentXqTimeId;
+                    } else if (currentXqTimeId != lastXqTimeId) {
                         log.info("{} - XQtimeid变化: {} -> {}", GAME_NAME, lastXqTimeId, currentXqTimeId);
                         log.info("{} - 原始响应数据: {}", GAME_NAME, responseBody);
 
@@ -79,18 +83,24 @@ public class YhtxGamePoller {
                                 ? bqWinNode.get(0)
                                 : null;
 
+                        boolean pushOk = false;
                         if (winnerNode != null) {
                             log.info("{} - winnerNode类型: {}, 内容: {}, asInt: {}", GAME_NAME, winnerNode.getNodeType(), winnerNode, winnerNode.asInt());
-                            sendLotteryResult(winnerNode);
+                            pushOk = sendLotteryResult(winnerNode);
                         } else {
                             log.warn("{} - BQwin为空，无法获取开奖结果", GAME_NAME);
                         }
 
-                        // 发送下期游戏开始时间
+                        // 发送下期游戏开始时间（独立于开奖推送）
                         sendGameTime();
-                    }
 
-                    lastXqTimeId = currentXqTimeId;
+                        // 只有推送成功才前进 baseline；失败则保留旧 lastXqTimeId，下一轮重试
+                        if (pushOk) {
+                            lastXqTimeId = currentXqTimeId;
+                        } else {
+                            log.warn("{} - 推送失败，保留 lastXqTimeId={} 下一轮重试当前期 {}", GAME_NAME, lastXqTimeId, currentXqTimeId);
+                        }
+                    }
                 }
             }
 
@@ -101,8 +111,10 @@ public class YhtxGamePoller {
 
     /**
      * 发送开奖结果到第三方
+     * @return 是否至少有一个目标推送成功
      */
-    private void sendLotteryResult(JsonNode winnerNode) {
+    private boolean sendLotteryResult(JsonNode winnerNode) {
+        boolean anySuccess = false;
         try {
             int winnerId = winnerNode.has("Pid") ? winnerNode.get("Pid").asInt() : winnerNode.asInt();
             log.info("{} - 解析开奖号码: Pid={}, 原始节点: {}", GAME_NAME, winnerId, winnerNode);
@@ -111,20 +123,21 @@ public class YhtxGamePoller {
             params.put("gameSucc", winnerId);
 
             String jsonParams = mapper.writeValueAsString(params);
-            log.error("{} - 推送的开奖数据", params);
+            log.info("{} - 推送的开奖数据 {}", GAME_NAME, params);
             for (String url : DomainNameUtil.urls) {
+                String fullUrl = url + "/yhtx/luckyMonster";
                 try {
-
-                    String fullUrl = url + "/yhtx/luckyMonster";  // 接口路径改为 yhtx
                     String resp = OkHttpUtil.postJson(fullUrl, jsonParams);
                     log.info("{} - 开奖结果同步请求响应：{} => {}", GAME_NAME, fullUrl, resp);
+                    anySuccess = true;
                 } catch (Exception e) {
-                    log.warn("{} - 开奖结果同步请求异常：{}", GAME_NAME, e.getMessage());
+                    log.warn("{} - 开奖结果同步请求异常：{} => {}", GAME_NAME, fullUrl, e.getMessage());
                 }
             }
         } catch (Exception e) {
             log.error("{} - 发送开奖结果异常", GAME_NAME, e);
         }
+        return anySuccess;
     }
 
     /**

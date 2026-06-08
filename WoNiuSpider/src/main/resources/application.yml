@@ -2,13 +2,13 @@
 server:
   port: 8022
   servlet:
-    context-path: /tigerTeeth
+    context-path: /woNiuSpider
 
 # Spring
 spring:
   application:
     # 应用名称
-    name: game-tigerTeeth
+    name: game-woNiuSpider
   profiles:
     # 环境配置
     active: '@profiles.active@'

@@ -15,7 +15,7 @@ public class YkService {
 
     @PostConstruct
     public void init() {
-        scheduler = Executors.newScheduledThreadPool(2, r -> {
+        scheduler = Executors.newScheduledThreadPool(3, r -> {
             Thread t = new Thread(r);
             t.setDaemon(true);
             return t;
@@ -49,6 +49,22 @@ public class YkService {
                     Thread.sleep(1000);
                 } catch (Exception e) {
                     log.error("银河探险 - 异步任务异常：", e);
+                }
+            }
+        });
+
+        // 启动探岛寻宝轮询任务
+        scheduler.submit(() -> {
+            Thread.currentThread().setName("探岛寻宝-scheduler");
+            TdxbGamePoller poller = new TdxbGamePoller();
+            log.info("异步任务启动：探岛寻宝");
+
+            while (true) {
+                try {
+                    poller.trySync();
+                    Thread.sleep(1000);
+                } catch (Exception e) {
+                    log.error("探岛寻宝 - 异步任务异常：", e);
                 }
             }
         });

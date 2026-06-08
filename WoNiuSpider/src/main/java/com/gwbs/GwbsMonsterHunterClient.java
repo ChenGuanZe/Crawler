@@ -29,12 +29,12 @@ public class GwbsMonsterHunterClient {
     private static final String CMD_NAME = "onmonsterhunter_currstatus";
     private static final int PLATFORM_ID = 5;
 
-    private static final String PROXY_HOST = "http://8.218.223.24:8085";
+    private static final String PROXY_HOST = "http://127.0.0.1:8085";
     private static final String SET_GAME_TIME_URL = PROXY_HOST + "/gameProxy/proxy/setGameTime";
     private static final String DEL_GAME_TIME_URL = PROXY_HOST + "/gameProxy/proxy/delGameTime";
     private static final int GAME_ID = 20;
 
-    private static final String UPLOAD_URL = "http://134.122.128.242:8081/wanshunGame/bjxgwbs/luckyMonster";
+    private static final String UPLOAD_URL = "http://127.0.0.1:8080/wanshunGame/bjxgwbs/luckyMonster";
 
     private static final String LOGIN_URL = "https://auth.suxinwlkj.com/api/xauth/login";
     private static final String USERINFO_URL = "https://api-live.suxinwlkj.com/milive.bizprofile.s/v1/get_member_own_info";
